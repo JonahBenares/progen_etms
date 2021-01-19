@@ -268,6 +268,21 @@ function remove_item(i){
      
 }
 
+function chooseTrans(){
+    var loc= document.getElementById("baseurl").value;
+    var redirect = loc+'report/getTrans';
+    var date = document.getElementById("date").value;
+    var location = document.getElementById("location").value;
+    $.ajax({
+            type: 'POST',
+            url: redirect,
+            data: 'date='+date+'&location='+location,
+            success: function(data){
+                $("#trans").html(data);
+           }
+    }); 
+}
+
 function chooseArs(){
     var loc= document.getElementById("baseurl").value;
     var redirect = loc+'report/getArs';

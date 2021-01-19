@@ -136,7 +136,7 @@
                               <a class="acc waves-effect waves-dark" href="<?php echo base_url(); ?>report/report_draft">Drafts</a>
                               <a class="acc waves-effect waves-dark" href="<?php echo base_url(); ?>report/report_main_avail">Available</a>
                               <a class="acc waves-effect waves-dark" href="<?php echo base_url(); ?>report/report_set_avail">Available Set</a>
-                            
+                              <a class="acc waves-effect waves-dark" href="<?php echo base_url(); ?>report/transfer_list">Transferred Items</a>
                               <a class="acc waves-effect waves-dark" href="<?php echo base_url(); ?>report/returned_list">Returned</a>
                               <a class="acc waves-effect waves-dark" href="<?php echo base_url(); ?>report/lost_list">Lost</a>
                               <a class="acc waves-effect waves-dark" href="<?php echo base_url(); ?>repair/repair_list">Damaged</a>

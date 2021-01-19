@@ -41,6 +41,51 @@
     </div>
 </div>
 
+<div class="modal fade" id="transferItem" tabindex="-1" role="dialog" aria-labelledby="largeModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="largeModalLabel"><span class="fa fa-forward"></span>  Transfer Item</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method='POST' action="<?php echo base_url(); ?>report/transfer_item">
+                <div class="modal-body">
+                    <table width="100%">
+                        <tr>
+                            <td><p>Location:</p>
+                                <select id="location" name="location" class="form-control bor-radius10">
+                                    <option value="">--Select Location--</option>
+                                    <?php foreach($location AS $l){ ?>
+                                    <option value="<?php echo $l->location_id; ?>"><?php echo $l->location_name; ?></option>
+                                    <?php } ?>
+                                </select>
+                            </td>
+                        </tr>  
+                        <tr>
+                            <td>
+                                <p>Date Transfer:</p>
+                                <input type="date" id="date" name="transfer_date" onChange="chooseTrans();" class="form-control bor-radius10">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <p>Transfer Series:</p>
+                                <select id="trans" name="transfer_no" class="form-control bor-radius5" readonly style = "pointer-events:none;-webkit-appearance: none;" ></select>
+                            </td>
+                        </tr>                                                     
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <input type="submit" class="btn btn-success btn-sm btn-block bor-radius" value='Save'>
+                </div>
+                <input type="hidden" name="ed_id" id="ed_ids">
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="page-wrapper">
     <div class="container-fluid">
         <div class="row page-titles">
@@ -99,9 +144,9 @@
                                             <div class="btn-group">
                                             <?php if($a['damaged']!=1){ ?>     
                                                 <?php if($_SESSION['usertype'] == 1){ ?>                                     
-                                                <a class="btn btn-secondary-alt text-white item btn-sm" data-toggle="modal" id = "lost_button" data-id = "<?php echo $a['empid'];?>" data-name = "<?php echo $a['accountability'];?>" data-ab = "<?php echo $a['ed_id'];?>" data-ac = '<?php echo $a['et_id']; ?>' data-target="#lostTag" title="Lost">
+                                                <span data-toggle="tooltip" data-placement="top" title="Lost Item"><a class="btn btn-secondary-alt text-white item btn-sm" data-toggle="modal" id = "lost_button" data-id = "<?php echo $a['empid'];?>" data-name = "<?php echo $a['accountability'];?>" data-ab = "<?php echo $a['ed_id'];?>" data-ac = '<?php echo $a['et_id']; ?>' data-target="#lostTag" title="Lost">
                                                     <i class="fa fa-minus-circle"></i>
-                                                </a>
+                                                </a></span>
                                                 <a class="btn btn-info-alt text-white item btn-sm" data-toggle="tooltip" data-placement="top" title="Update" href="<?php echo base_url(); ?>report/edit_encode/<?php echo $a['et_id'];?>">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
@@ -110,6 +155,9 @@
                                                     <i class="fa fa-print"></i>
                                                 </a>
                                                 <?php if($_SESSION['usertype'] == 1){ ?>
+                                                <span data-toggle="tooltip" data-placement="top" title="Transfer Item"><a class="btn btn-success-alt item btn-sm text-white" id="itemTransfer" data-id = "<?php echo $a['ed_id'];?>" data-toggle="modal" data-placement="top" title="Transfer Item" data-target="#transferItem">
+                                                    <i class="fa fa-forward"></i>
+                                                </a></span>
                                                 <a class="btn btn-danger-alt item btn-sm text-white" onClick="tagAsDamage(<?php echo $a['empid'];?>,<?php echo $a['et_id'];?>)" data-toggle="tooltip" data-placement="top" title="Tag as Damage">
                                                     <i class="fa fa-times"></i>
                                                 </a>

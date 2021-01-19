@@ -2228,6 +2228,7 @@ class Report extends CI_Controller {
         $data['available_set_qty']= $this->row_set_avail();
         $data['available_qty']= $this->row_avail();
         $data['damage_qty']=$this->super_model->count_custom_where("et_details", "damage='1'");
+        $data['location'] = $this->super_model->select_all_order_by('location', 'location_name', 'ASC');
         if($row_avail!=0){
             foreach($this->super_model->select_join_where("et_head","et_details","damage='0' AND accountability_id = '0' AND change_location = '0' AND lost='0' AND cancelled = '0'","et_id") as $et){
                 $damage =$this->super_model->select_column_where("et_details", "damage", "et_id", $et->et_id);
@@ -2260,6 +2261,998 @@ class Report extends CI_Controller {
 
         $this->load->view('report/report_main_avail',$data);
         $this->load->view('template/footer');
+    }
+
+    public function transfer_item(){
+        $ed_id = $this->input->post('ed_id');
+        $location = $this->input->post('location');
+        $transfer_date = $this->input->post('transfer_date');
+        $transfer_no = $this->input->post('transfer_no');
+        $data = array(
+            'change_location'=>1,
+            'location_id'=>$location,
+            'date_transfer'=>$transfer_date,
+            'transfer_series'=>$transfer_no,
+        ); 
+        if($this->super_model->update_where("et_details", $data, "ed_id", $ed_id)){
+            $trans = $this->input->post('transfer_no');
+            $assetdetails=explode("-", $trans);
+            $trans_one=$assetdetails[0];
+            $trans_two=$assetdetails[1];
+            $trans_three=$assetdetails[2];
+            $trans_four =$assetdetails[3];
+            $trans_five = (!empty($assetdetails[4])) ? $assetdetails[4] : '';
+            if(!empty($trans_one) && !empty($trans_two) && !empty($trans_three) && !empty($trans_four) && !empty($trans_five)){
+                $subcat_prefix1=$assetdetails[0];
+                $subcat_prefix2=$assetdetails[1];
+                $subcat_prefix3=$assetdetails[2];
+                $subcat_prefix4=$assetdetails[3];
+                $subcat_prefix=$subcat_prefix1."-".$subcat_prefix2."-".$subcat_prefix3."-".$subcat_prefix4;
+                $series = $assetdetails[4];
+            }else {
+                $subcat_prefix1=$assetdetails[0];
+                $subcat_prefix2=$assetdetails[1];
+                $subcat_prefix3=$assetdetails[2];
+                $subcat_prefix=$subcat_prefix1."-".$subcat_prefix2."-".$subcat_prefix3;
+                $series = $assetdetails[3]; 
+            }
+            $trans_data= array(
+                'prefix'=>$subcat_prefix,
+                'series'=>$series
+            );
+            $this->super_model->insert_into("transfer_series", $trans_data);
+        }
+        echo "<script>alert('Successfully Transfered!'); window.location = '".base_url()."report/report_main_avail';</script>";
+    }
+
+    public function getTrans(){
+        $date = $this->input->post('date');
+        $location_id = $this->input->post('location');
+        $location_prefix = $this->super_model->select_column_where("location","location_prefix",'location_id',$location_id);
+            
+        $date_format = date("Y-m",strtotime($date));
+        $trans_prefix=$location_prefix."-".$date_format;
+
+        $rows=$this->super_model->count_custom_where("transfer_series","prefix = '$trans_prefix'");
+        if($rows==0){
+            $trans_no= $location_prefix."-".$date_format."-1001";
+        } else {
+            $series = $this->super_model->get_max_where("transfer_series", "series","prefix = '$trans_prefix'");
+            $next=$series+1;
+            $trans_no = $location_prefix."-".$date_format."-".$next;
+        }
+        echo '<option value="'. $trans_no .'">'. $trans_no .'</option>';
+    }
+
+    public function transfer_list(){
+         $this->load->view('template/header');
+        $this->load->view('template/navbar',$this->dropdown);
+        $row=$this->super_model->count_custom_where("et_head", "accountability_id!=0");
+        $row_avail = $this->row_avail();
+        $data['available_set_qty']= $this->row_set_avail();
+        $data['available_qty']= $this->row_avail();
+        $data['damage_qty']=$this->super_model->count_custom_where("et_details", "damage='1'");
+        $data['cat'] = $this->super_model->select_all_order_by('category', 'category_name', 'ASC');
+        $data['placement1'] = $this->super_model->select_all_order_by('placement', 'placement_name', 'ASC');
+        $data['company1'] = $this->super_model->select_all_order_by('company', 'company_name', 'ASC');
+        $data['rack1'] = $this->super_model->select_all_order_by('rack', 'rack_name', 'ASC');
+        if($row!=0){
+            foreach($this->super_model->custom_query("SELECT * FROM et_head eh INNER JOIN et_details ed ON eh.et_id = ed.et_id WHERE cancelled='0' AND save_temp='0' AND lost='0' AND change_location='1' GROUP BY eh.et_id") AS $et){
+                $unit =$this->super_model->select_column_where("unit", "unit_name", "unit_id", $et->unit_id);
+                $accountability =$this->super_model->select_column_where("employees", "employee_name", "employee_id", $et->accountability_id);
+                $empid =$this->super_model->select_column_where("employees", "employee_id", "employee_id", $et->accountability_id);
+                $category =$this->super_model->select_column_where("category", "category_name", "category_id", $et->category_id);
+                $subcat =$this->super_model->select_column_where("subcategory", "subcat_name", "subcat_id", $et->subcat_id);
+                $location =$this->super_model->select_column_where("location", "location_name", "location_id", $et->location_id);
+                $data['main'][] = array(
+                    'et_id'=>$et->et_id,
+                    'ed_id'=>$et->ed_id,
+                    'cat'=>$category,
+                    'subcat'=>$subcat,
+                    'unit'=>$unit,
+                    'department'=>$et->department,
+                    'location'=>$location,
+                    'et_desc'=>$et->et_desc,
+                    'qty'=>$et->qty,
+                    'accountability'=>$accountability,
+                    'empid'=>$empid,
+                );
+            }
+            foreach($this->super_model->select_all_order_by("employees", "employee_name", "ASC") AS $emp){
+                $count = $this->super_model->count_custom_where('et_head',"accountability_id = '$emp->employee_id'");
+                $data['employees'][] = array(
+                    'employee_id'=>$emp->employee_id,
+                    'employee'=>$emp->employee_name,
+                    'count'=>$count
+                );
+            }
+        }else {
+            $data['main'] = array();
+        }
+        $this->load->view('report/transfer_list',$data);
+        $this->load->view('template/footer');
+    }
+
+    public function transfer_form(){  
+        $this->load->view('template/header');
+        $this->load->view('template/navbar',$this->dropdown);
+        $data['id']=$this->uri->segment(3);
+        $id=$this->uri->segment(3);
+        foreach($this->super_model->select_row_where('et_head','et_id',$id) AS $et){
+            $data['type'] = $this->super_model->select_column_where("employees", "type", "employee_id", $et->accountability_id); 
+            $data['employee_no'] = $this->super_model->select_column_where("employees", "aaf_no", "employee_id", $et->accountability_id); 
+            $data['save_temp']=$et->save_temp;
+            foreach($this->super_model->select_row_where('employee_inclusion','parent_id',$et->accountability_id) AS $em){
+                $status = $this->super_model->select_column_where("employees", "status", "employee_id", $em->child_id);
+                if($status==0){
+                    $data['child'][] = array( 
+                        'emp'=> $this->super_model->select_column_custom_where("employees", "employee_name", "employee_id='$em->child_id' AND status='0'"), 
+                    );
+                }
+            }
+            $data['name'] =$this->super_model->select_column_where("employees", "employee_name", "employee_id", $et->accountability_id);
+            $data['position'] =$this->super_model->select_column_where("employees", "position", "employee_id", $et->accountability_id);
+            foreach($this->super_model->select_row_where('et_details','et_id',$et->et_id) AS $det){
+                $item = $this->super_model->select_column_where("et_head", "et_desc", "et_id", $det->et_id);
+                $price = $this->super_model->select_column_where("et_details", "unit_price", "ed_id", $det->ed_id);
+                $brand = $this->super_model->select_column_where("et_details", "brand", "ed_id", $det->ed_id);
+                $type = $this->super_model->select_column_where("et_details", "type", "ed_id", $det->ed_id);
+                $model = $this->super_model->select_column_where("et_details", "model", "ed_id", $det->ed_id);
+                $serial = $this->super_model->select_column_where("et_details", "serial_no", "ed_id", $det->ed_id);
+                $currency = $this->super_model->select_column_where("currency", "currency_name", "currency_id", $det->currency_id);
+                $qty = '1';
+                $total = $qty * $price;
+                $data['date_issued'] = $det->date_issued;
+                foreach($this->super_model->select_row_where('et_head','et_id',$det->et_id) AS $u){
+                    $unit = $this->super_model->select_column_where('unit', 'unit_name', 'unit_id', $u->unit_id);
+                    $data['user_id'] =$_SESSION['fullname'];
+                    $data['department'] =$u->department;
+                }
+                $data['date_transfer'] = $det->date_transfer;
+                $data['transfer_series'] = $det->transfer_series;
+                $data['details'][] = array(
+                    'et_id'=>$det->et_id,
+                    'ed_id'=>$det->ed_id,
+                    'date_transfer'=>$det->date_transfer,
+                    'transfer_series'=>$det->transfer_series,
+                    'acn_no'=>$det->asset_control_no,
+                    'date'=>$det->acquisition_date,
+                    'date_issued'=>$det->date_issued,
+                    'currency'=>$currency,
+                    'qty'=>$qty,
+                    'item'=>$item,
+                    'type'=>$type,
+                    'brand'=>$brand,
+                    'serial'=>$serial,
+                    'model'=>$model,
+                    'price'=>$price,
+                    'total'=>$total,
+                    'unit'=>$unit
+                );
+                foreach($this->super_model->select_row_where("et_details", "ed_id", $det->ed_id) AS $et_rem){
+                    $data['remarks_it'][] = array(
+                        'ed_id'=>$et_rem->ed_id,
+                        'remarks'=>$et_rem->remarks
+                    );
+                }
+            }
+            $data['head'][] = array(
+                'et_id'=>$et->et_id,
+            ); 
+              
+        }
+        $this->load->view('report/transfer_form',$data);
+        $this->load->view('template/footer');
+    }
+
+    public function search_report_trans(){
+        $this->load->view('template/header');
+        $this->load->view('template/navbar',$this->dropdown);
+        $url=$this->uri->segment(2);
+        if(!empty($this->input->post('encoded_from'))){
+            $data['encoded_from'] = $this->input->post('encoded_from');
+        } else {
+            $data['encoded_from']= "null";
+        }
+
+        if(!empty($this->input->post('encoded_to'))){
+            $data['encoded_to'] = $this->input->post('encoded_to');
+        } else {
+            $data['encoded_to']= "null";
+        }
+
+        if(!empty($this->input->post('from'))){
+            $data['from'] = $this->input->post('from');
+        } else {
+            $data['from']= "null";
+        }
+
+        if(!empty($this->input->post('to'))){
+            $data['to'] = $this->input->post('to');
+        } else {
+            $data['to']= "null";
+        }
+
+        if(!empty($this->input->post('category'))){
+            $data['category'] = $this->input->post('category');
+        } else {
+            $data['category'] = "null";
+        }
+
+        if(!empty($this->input->post('subcat'))){
+            $data['subcat'] = $this->input->post('subcat');
+        } else {
+            $data['subcat'] = "null";
+        }
+
+        if(!empty($this->input->post('department'))){
+            $data['department'] = $this->input->post('department');
+        } else {
+            $data['department'] = "null";
+        }
+
+        if(!empty($this->input->post('item'))){
+            $data['item'] = $this->input->post('item');
+        } else {
+            $data['item'] = "null";
+        } 
+
+        if(!empty($this->input->post('brand'))){
+            $data['brand'] = $this->input->post('brand');
+        } else {
+            $data['brand'] = "null";
+        } 
+
+        if(!empty($this->input->post('item_type'))){
+            $data['item_type'] = $this->input->post('item_type');
+        } else {
+            $data['item_type'] = "null";
+        } 
+
+        if(!empty($this->input->post('model'))){
+            $data['model'] = $this->input->post('model');
+        } else {
+            $data['model'] = "null";
+        } 
+
+        if(!empty($this->input->post('serial_no'))){
+            $data['serial_no'] = $this->input->post('serial_no');
+        } else {
+            $data['serial_no'] = "null";
+        } 
+
+        if(!empty($this->input->post('damage'))){
+            $data['damage'] = $this->input->post('damage');
+        } else {
+            $data['damage'] = "null";
+        } 
+
+        if(!empty($this->input->post('condition'))){
+            $data['condition'] = $this->input->post('condition');
+        } else {
+            $data['condition'] = "null";
+        }
+
+        if(!empty($this->input->post('placement'))){
+            $data['placement'] = $this->input->post('placement');
+        } else {
+            $data['placement'] = "null";
+        }
+
+        if(!empty($this->input->post('company'))){
+            $data['company'] = $this->input->post('company');
+        } else {
+            $data['company'] = "null";
+        }
+
+        if(!empty($this->input->post('rack'))){
+            $data['rack'] = $this->input->post('rack');
+        } else {
+            $data['rack'] = "null";
+        }
+
+        $sql="";
+        $filter = "";
+        if(!empty($this->input->post('encoded_from')) && !empty($this->input->post('encoded_to'))){
+            $encoded_from = $this->input->post('encoded_from');
+            $encoded_to = $this->input->post('encoded_to');
+            $sql.= " eh.create_date BETWEEN '$encoded_from' AND '$encoded_to' AND";
+            $filter .= "Date Encoded - ".$encoded_from.' <strong>To</strong> '.$encoded_to.", ";
+        }
+
+        if(!empty($this->input->post('from')) && !empty($this->input->post('to'))){
+            $from = $this->input->post('from');
+            $to = $this->input->post('to');
+            $sql.= " ed.acquisition_date BETWEEN '$from' AND '$to' AND";
+            $filter .= "Acquisition Date - ".$from.' <strong>To</strong> '.$to.", ";
+        }
+
+        if(!empty($this->input->post('category'))){
+            $category = $this->input->post('category');
+            $sql.=" eh.category_id = '$category' AND";
+            $cat = $this->super_model->select_column_where("category", "category_name", "category_id", $category);
+            $filter .= "Category - ".$cat.", ";
+        }
+
+        if(!empty($this->input->post('subcat'))){
+            $subcat = $this->input->post('subcat');
+            $sql.=" eh.subcat_id = '$subcat' AND";
+            $subcat1 = $this->super_model->select_column_where("subcategory", "subcat_name", "subcat_id", $subcat);
+            $filter .= "Sub Category - ".$subcat1.", ";
+        }
+
+        if(!empty($this->input->post('department'))){
+            $department = $this->input->post('department');
+            $sql.=" eh.department LIKE '%$department%' AND";
+            $filter .= "Department - ".$department.", ";
+        }
+
+        if(!empty($this->input->post('item'))){
+            $item = $this->input->post('item');
+            $sql.=" eh.et_desc LIKE '%$item%' AND";
+            $filter .= "Item Description - ".$item.", ";
+        }
+
+        if(!empty($this->input->post('brand'))){
+            $brand = $this->input->post('brand');
+            $sql.=" ed.brand LIKE '%$brand%' AND";
+            $filter .= "Brand - ".$brand.", ";
+        }
+
+        if(!empty($this->input->post('model'))){
+            $model = $this->input->post('model');
+            $sql.=" ed.model LIKE '%$model%' AND";
+            $filter .= "Model - ".$model.", ";
+        }
+
+        if(!empty($this->input->post('item_type'))){
+            $item_type = $this->input->post('item_type');
+            $sql.=" ed.type LIKE '%$item_type%' AND";
+            $filter .= "Type - ".$item_type.", ";
+        }
+
+        if(!empty($this->input->post('serial_no'))){
+            $serial_no = $this->input->post('serial_no');
+            $sql.=" ed.serial_no LIKE '%$serial_no%' AND";
+            $filter .= "Serial No. - ".$serial_no.", ";
+        }
+
+        if(!empty($this->input->post('damage'))){
+            $damage = $this->input->post('damage');
+            $sql.=" ed.damage = '$damage' AND";
+            $filter .= "Damage Items, ";
+        }
+
+        if(!empty($this->input->post('condition'))){
+            $condition = $this->input->post('condition');
+            $sql.=" ed.physical_condition LIKE '%$condition%' AND";
+            $filter .= "Physical Condition - ".$condition.", ";
+        }
+
+        if(!empty($this->input->post('placement'))){
+            $placement = $this->input->post('placement');
+            $sql.=" ed.placement_id = '$placement' AND";
+            $place = $this->super_model->select_column_where("placement", "placement_name", "placement_id", $placement);
+            $filter .= "Placement - ".$place.", ";
+        }
+
+        if(!empty($this->input->post('company'))){
+            $company = $this->input->post('company');
+            $sql.=" ed.company_id = '$company' AND";
+            $rr = $this->super_model->select_column_where("company", "company_name", "company_id", $company);
+            $filter .= "company - ".$rr.", ";
+        }
+
+        if(!empty($this->input->post('rack'))){
+            $rack = $this->input->post('rack');
+            $sql.=" ed.rack_id = '$rack' AND";
+            $rak = $this->super_model->select_column_where("rack", "rack_name", "rack_id", $rack);
+            $filter .= "Rack - ".$rak.", ";
+        }
+
+        $query=substr($sql, 0, -3);
+        $data['filt']=substr($filter, 0, -2);
+        $data['available_set_qty']= $this->row_set_avail();
+        $data['available_qty']=$this->super_model->select_count_join_inner('et_head','et_details', "damage='0' AND accountability_id = '0'",'et_id');
+        $data['damage_qty']=$this->super_model->count_custom_where("et_details", "damage='1'");
+        $data['cat'] = $this->super_model->select_all_order_by('category', 'category_name', 'ASC');
+        $data['company1'] = $this->super_model->select_all_order_by('company', 'company_name', 'ASC');
+        $data['placement1'] = $this->super_model->select_all_order_by('placement', 'placement_name', 'ASC');
+        $data['rack1'] = $this->super_model->select_all_order_by('rack', 'rack_name', 'ASC');
+        foreach ($this->super_model->custom_query("SELECT * FROM et_head eh INNER JOIN et_details ed ON eh.et_id=ed.et_id WHERE cancelled='0' AND save_temp='0' AND change_location='1' AND $query GROUP BY eh.et_id") AS $et){
+            $unit =$this->super_model->select_column_where("unit", "unit_name", "unit_id", $et->unit_id);
+            $accountability =$this->super_model->select_column_where("employees", "employee_name", "employee_id", $et->accountability_id);
+            $empid =$this->super_model->select_column_where("employees", "employee_id", "employee_id", $et->accountability_id);
+            $category =$this->super_model->select_column_where("category", "category_name", "category_id", $et->category_id);
+            $subcat =$this->super_model->select_column_where("subcategory", "subcat_name", "subcat_id", $et->subcat_id);
+            $location =$this->super_model->select_column_where("location", "location_name", "location_id", $et->location_id);
+            $data['main'][] = array(
+                'et_id'=>$et->et_id,
+                'ed_id'=>$et->ed_id,
+                'cat'=>$category,
+                'subcat'=>$subcat,
+                'unit'=>$unit,
+                'department'=>$et->department,
+                'location'=>$location,
+                'et_desc'=>$et->et_desc,
+                'qty'=>$et->qty,
+                'accountability'=>$accountability,
+                'empid'=>$empid,
+            );
+        }
+        foreach($this->super_model->select_all_order_by("employees", "employee_name", "ASC") AS $emp){
+            $count = $this->super_model->count_custom_where('et_head',"accountability_id = '$emp->employee_id' AND cancelled='0'");
+            $data['employees'][] = array(
+                'employee_id'=>$emp->employee_id,
+                'employee'=>$emp->employee_name,
+                'count'=>$count
+            );
+        }
+        $this->load->view('report/transfer_list',$data);
+        $this->load->view('template/footer');
+    }
+
+    public function transfer_print(){  
+        $this->load->view('template/header');
+        $from=$this->uri->segment(3);
+        $to=$this->uri->segment(4);
+        $category=$this->uri->segment(5);
+        $subcat=$this->uri->segment(6);
+        $department=str_replace("%20"," ",$this->uri->segment(7));
+        $item=urldecode(str_replace("%20"," ",$this->uri->segment(8)));
+        $brand=str_replace("%20"," ",$this->uri->segment(9));
+        $model=str_replace("%20"," ",$this->uri->segment(10));
+        $type=str_replace("%20"," ",$this->uri->segment(11));
+        $serial=str_replace("%20"," ",$this->uri->segment(12));
+        $damage=$this->uri->segment(13);
+        $condition=$this->uri->segment(14);
+        $placement=$this->uri->segment(15);
+        $company=$this->uri->segment(16);
+        $rack=$this->uri->segment(17);
+        $encoded_from=$this->uri->segment(18);
+        $encoded_to=$this->uri->segment(19);
+        $sql="";
+        $filter = "";
+        if($encoded_from!='null' && $encoded_to!='null'){
+           $sql.= " eh.create_date BETWEEN '$encoded_from' AND '$encoded_to' AND";
+           $filter .= $encoded_from.''.$encoded_to;
+        }
+
+        if($from!='null' && $to!='null'){
+           $sql.= " ed.acquisition_date BETWEEN '$from' AND '$to' AND";
+           $filter .= $from.''.$to;
+        }
+
+        if($category!='null'){
+            $sql.=" eh.category_id = '$category' AND";
+            $cat = $this->super_model->select_column_where("category", "category_name", "category_id", $category);
+            $filter .= $cat;
+        }
+
+        if($subcat!='null'){
+            $sql.=" eh.subcat_id = '$subcat' AND";
+            $subcat = $this->super_model->select_column_where("subcategory", "subcat_name", "subcat_id", $subcat);
+            $filter .= $subcat;
+        }
+
+        if($department!='null'){
+            $sql.=" eh.department LIKE '%$department%' AND";
+            $filter .= $department;
+        }
+
+        if($item!='null'){
+            $sql.=" eh.et_desc LIKE '%$item%' AND";
+
+            $filter .= $item;
+        }
+
+        if($brand!='null'){
+            $sql.=" ed.brand LIKE '%$brand%' AND";
+            $filter .= $brand;
+        }
+
+        if($model!='null'){
+            $sql.=" ed.model LIKE '%$model%' AND";
+            $filter .= $model;
+        }
+
+        if($type!='null'){
+            $sql.=" ed.type LIKE '%$type%' AND";
+            $filter .= $type;
+        }
+
+        if($serial!='null'){
+            $sql.=" ed.serial_no LIKE '%$serial%' AND";
+            $filter .= $serial;
+        }
+
+        if($damage!='null'){
+            $sql.=" ed.damage = '$damage' AND";
+            $filter .= $damage;
+        }
+
+        if($condition!='null'){
+            $sql.=" ed.physical_condition LIKE '%$condition%' AND";
+            $filter .= $condition;
+        }
+
+        if($placement!='null'){
+            $sql.=" ed.placement_id = '$placement' AND";
+            $place = $this->super_model->select_column_where("placement", "placement_name", "placement_id", $placement);
+            $filter .= $place;
+        }
+
+        if($company!='null'){
+            $sql.=" ed.company_id = '$company' AND";
+            $rr = $this->super_model->select_column_where("company", "company_name", "company_id", $company);
+            $filter .= $rr;
+        }
+
+        if($rack!='null'){
+            $sql.=" ed.rack_id = '$rack' AND";
+            $rak = $this->super_model->select_column_where("rack", "rack_name", "rack_id", $rack);
+            $filter .= $rak;
+        }
+
+        $array = array($from,$to);
+        $query=substr($sql, 0, -3);
+        $filters=substr($filter, 0, -2);
+        $data['report']=array();
+        if($filters!=''){
+            foreach ($this->super_model->custom_query("SELECT * FROM et_head eh INNER JOIN et_details ed ON eh.et_id = ed.et_id WHERE change_location='1' AND $query GROUP BY eh.et_id") AS $et){
+                $data['user_id'] =$_SESSION['fullname'];
+                $unit =$this->super_model->select_column_where("unit", "unit_name", "unit_id", $et->unit_id);
+                $accountability =$this->super_model->select_column_where("employees", "employee_name", "employee_id", $et->accountability_id);
+                $category =$this->super_model->select_column_where("category", "category_name", "category_id", $et->category_id);
+                $subcat =$this->super_model->select_column_where("subcategory", "subcat_name", "subcat_id", $et->subcat_id);
+                $currency = $this->super_model->select_column_where("currency", "currency_name", "currency_id", $et->currency_id);
+                $company = $this->super_model->select_column_where("company", "company_name", "company_id", $et->company_id);
+                $rack = $this->super_model->select_column_where("rack", "rack_name", "rack_id", $et->rack_id);
+                $placement = $this->super_model->select_column_where("placement", "placement_name", "placement_id", $et->placement_id);
+                $total = $et->qty*$et->unit_price;
+                $serial_no='';
+                foreach($this->super_model->select_row_where("et_details", "et_id", $et->et_id) AS $ser){
+                    $serial_no .= (!empty($ser->serial_no)) ? $ser->serial_no.", " : '';
+                }
+                $location = $this->super_model->select_column_where("location", "location_name", "location_id", $et->location_id);
+                $data['report'][]=array(
+                    'item'=>$et->et_desc,
+                    'qty'=>$et->qty,
+                    'unit'=>$unit,
+                    'accountability'=>$accountability,
+                    'accountability_id'=>$et->accountability_id,
+                    'department'=>$et->department,
+                    'category'=>$category,
+                    'subcat'=>$subcat,
+                    'asset_control_no'=>$et->asset_control_no,
+                    'acquisition_date'=>$et->acquisition_date,
+                    'date_issued'=>$et->date_issued,
+                    'unit_price'=>$et->unit_price,
+                    'currency'=>$currency,
+                    'condition'=>$et->physical_condition,
+                    'company'=>$company,
+                    'rack'=>$rack,
+                    'placement'=>$placement,
+                    'brand'=>$et->brand,
+                    'remarks'=>$et->remarks,
+                    'total'=>$total,
+                    'serial_no'=>$serial_no,
+                    'model'=>$et->model,
+                    'borrowed'=>$et->borrowed,
+                    'damaged'=>$et->damage,
+                    'lost'=>$et->lost,
+                    'change_location'=>$et->change_location,
+                    'location'=>$location,
+                );
+            }
+        }else {
+            foreach ($this->super_model->custom_query("SELECT * FROM et_head eh INNER JOIN et_details ed ON eh.et_id = ed.et_id WHERE save_temp='0' AND lost='0' AND change_location='1' GROUP BY eh.et_id") AS $et){
+                $data['user_id'] =$_SESSION['fullname'];
+                $unit =$this->super_model->select_column_where("unit", "unit_name", "unit_id", $et->unit_id);
+                $accountability =$this->super_model->select_column_where("employees", "employee_name", "employee_id", $et->accountability_id);
+                $category =$this->super_model->select_column_where("category", "category_name", "category_id", $et->category_id);
+                $subcat =$this->super_model->select_column_where("subcategory", "subcat_name", "subcat_id", $et->subcat_id);
+                $currency = $this->super_model->select_column_where("currency", "currency_name", "currency_id", $et->currency_id);
+                $company = $this->super_model->select_column_where("company", "company_name", "company_id", $et->company_id);
+                $rack = $this->super_model->select_column_where("rack", "rack_name", "rack_id", $et->rack_id);
+                $placement = $this->super_model->select_column_where("placement", "placement_name", "placement_id", $et->placement_id);
+                $total = $et->qty*$et->unit_price;
+                $serial_no='';
+                foreach($this->super_model->select_row_where("et_details", "et_id", $et->et_id) AS $ser){
+                    $serial_no .= (!empty($ser->serial_no)) ? $ser->serial_no.", " : '';
+                }
+                $location = $this->super_model->select_column_where("location", "location_name", "location_id", $et->location_id);
+                $data['report'][]=array(
+                    'item'=>$et->et_desc,
+                    'qty'=>$et->qty,
+                    'unit'=>$unit,
+                    'accountability'=>$accountability,
+                    'accountability_id'=>$et->accountability_id,
+                    'department'=>$et->department,
+                    'category'=>$category,
+                    'subcat'=>$subcat,
+                    'asset_control_no'=>$et->asset_control_no,
+                    'acquisition_date'=>$et->acquisition_date,
+                    'date_issued'=>$et->date_issued,
+                    'unit_price'=>$et->unit_price,
+                    'currency'=>$currency,
+                    'condition'=>$et->physical_condition,
+                    'company'=>$company,
+                    'rack'=>$rack,
+                    'placement'=>$placement,
+                    'brand'=>$et->brand,
+                    'remarks'=>$et->remarks,
+                    'total'=>$total,
+                    'serial_no'=>$serial_no,
+                    'model'=>$et->model,
+                    'borrowed'=>$et->borrowed,
+                    'damaged'=>$et->damage,
+                    'lost'=>$et->lost,
+                    'change_location'=>$et->change_location,
+                    'location'=>$location,
+                );
+            }
+        }
+        $this->load->view('report/transfer_print',$data);
+        $this->load->view('template/footer');
+    }
+
+    public function export_transfer(){
+        require_once(APPPATH.'../assets/dist/js/phpexcel/Classes/PHPExcel/IOFactory.php');
+        $objPHPExcel = new PHPExcel();
+        $exportfilename="Transfered Items.xlsx";
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('A1', "Transfered Items");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('A2', "Date Encoded");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('B2', "Category");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('C2', "Sub Category");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('D2', "Asset Control No.");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('E2', "Acquisition Date");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('F2', "Item Description");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('G2', "Brand");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('H2', "Type");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('I2', "Model");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('J2', "Serial No.");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('K2', "QTY");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('L2', "UOM");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('M2', "Supplier");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('N2', "Date Issued ");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('O2', "Accountability");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('P2', "Status");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Q2', "Office / Department");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('R2', "Placement");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('S2', "Company");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('T2', "Rack");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('U2', "Physical Condition");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('V2', "Set Name");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('W2', "Set Serial No.");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('X2', "Unit Cost");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Y2', "Total Cost");
+        $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Z2', "Remarks");
+        $styleArray = array(
+          'borders' => array(
+            'allborders' => array(
+              'style' => PHPExcel_Style_Border::BORDER_THIN
+            )
+          )
+        );
+        foreach(range('A','Z') as $columnID){
+            $objPHPExcel->getActiveSheet()->getColumnDimension($columnID)->setAutoSize(true);
+        }
+        $num=3;
+        $t=4;
+
+        $from=$this->uri->segment(3);
+        $to=$this->uri->segment(4);
+        $category=$this->uri->segment(5);
+        $subcat=$this->uri->segment(6);
+        $department=str_replace("%20"," ",$this->uri->segment(7));
+        if(stripos($this->uri->segment(8), "%20%20") !== false) {
+            $item=urldecode(str_replace("%20%20",", ",$this->uri->segment(8)));
+        } else if(stripos($this->uri->segment(8), "%20") !== false) {
+            $item=urldecode(str_replace("%20"," ",$this->uri->segment(8)));
+        }else{
+            $item=urldecode($this->uri->segment(8));
+        }
+        $brand=str_replace("%20"," ",$this->uri->segment(9));
+        $model=str_replace("%20"," ",$this->uri->segment(10));
+        $type=str_replace("%20"," ",$this->uri->segment(11));
+        $serial=str_replace("%20"," ",$this->uri->segment(12));
+        $damage=$this->uri->segment(13);
+        $condition=$this->uri->segment(14);
+        $placement=$this->uri->segment(15);
+        $company=$this->uri->segment(16);
+        $rack=$this->uri->segment(17);
+        $encoded_from=$this->uri->segment(18);
+        $encoded_to=$this->uri->segment(19);
+
+        $sql="";
+        $filter = " ";
+
+        if($encoded_from!='null' && $encoded_to!='null'){
+           $sql.= " eh.create_date BETWEEN '$encoded_from' AND '$encoded_to' AND";
+           $filter .= $encoded_from.''.$encoded_to;
+        }
+
+        if($from!='null' && $to!='null'){
+           $sql.= " ed.acquisition_date BETWEEN '$from' AND '$to' AND";
+           $filter .= $from.''.$to;
+        }
+
+        if($category!='null'){
+            $sql.=" eh.category_id = '$category' AND";
+            $cat = $this->super_model->select_column_where("category", "category_name", "category_id", $category);
+            $filter .= $cat;
+        }
+
+        if($subcat!='null'){
+            $sql.=" eh.subcat_id = '$subcat' AND";
+            $subcat = $this->super_model->select_column_where("subcategory", "subcat_name", "subcat_id", $subcat);
+            $filter .= $subcat;
+        }
+
+        if($department!='null'){
+            $sql.=" eh.department LIKE '%$department%' AND";
+            $filter .=$department;
+        }
+
+        if($item!='null'){
+            $sql.=" eh.et_desc LIKE '%$item%' AND";
+
+            $filter .= $item;
+        }
+
+        if($brand!='null'){
+            $sql.=" ed.brand LIKE '%$brand%' AND";
+            $filter .= $brand;
+        }
+
+        if($model!='null'){
+            $sql.=" ed.model LIKE '%$model%' AND";
+            $filter .= $model;
+        }
+
+        if($type!='null'){
+            $sql.=" ed.type LIKE '%$type%' AND";
+            $filter .= $type;
+        }
+
+        if($serial!='null'){
+            $sql.=" ed.serial_no LIKE '%$serial%' AND";
+            $filter .= $serial;
+        }
+
+        if($damage!='null'){
+            $sql.=" ed.damage = '$damage' AND";
+            $filter .= $damage;
+        }/*else{
+            $sql.=" ed.damage = '0' AND";
+            $filter .= $damage;
+        }*/
+
+        if($condition!='null'){
+            $sql.=" ed.physical_condition LIKE '%$condition%' AND";
+            $filter .= $condition;
+        }
+
+        if($placement!='null'){
+            $sql.=" ed.placement_id = '$placement' AND";
+            $place = $this->super_model->select_column_where("placement", "placement_name", "placement_id", $placement);
+            $filter .= $place;
+        }
+
+        if($company!='null'){
+            $sql.=" ed.company_id = '$company' AND";
+            $rr = $this->super_model->select_column_where("company", "company_name", "company_id", $company);
+            $filter .=$rr;
+        }
+
+        if($rack!='null'){
+            $sql.=" ed.rack_id = '$rack' AND";
+            $rack = $this->super_model->select_column_where("rack", "rack_name", "rack_id", $rack);
+            $filter .=$rack;
+        }
+
+        $array = array($from,$to);
+        $query=substr($sql, 0, -3);
+        $filter=substr($filter, 0, -2);
+        if($filter!=''){
+            $previousId = '';
+            foreach ($this->super_model->custom_query("SELECT * FROM et_head eh INNER JOIN et_details ed ON eh.et_id=ed.et_id WHERE eh.cancelled='0' AND eh.save_temp='0' AND ed.change_location='1' AND $query GROUP BY eh.et_id ORDER BY ed.set_id DESC") AS $et){
+                $unit =$this->super_model->select_column_where("unit", "unit_name", "unit_id", $et->unit_id);
+                $accountability =$this->super_model->select_column_where("employees", "employee_name", "employee_id", $et->accountability_id);
+                $category =$this->super_model->select_column_where("category", "category_name", "category_id", $et->category_id);
+                $subcat =$this->super_model->select_column_where("subcategory", "subcat_name", "subcat_id", $et->subcat_id);
+                $currency = $this->super_model->select_column_where("currency", "currency_name", "currency_id", $et->currency_id);
+                $company = $this->super_model->select_column_where("company", "company_name", "company_id", $et->company_id);
+                $rack = $this->super_model->select_column_where("rack", "rack_name", "rack_id", $et->rack_id);
+                $placement = $this->super_model->select_column_where("placement", "placement_name", "placement_id", $et->placement_id);
+                $serial_no='';
+                foreach($this->super_model->select_row_where("et_details", "et_id", $et->et_id) AS $ser){
+                    $serial_no .= (!empty($ser->serial_no)) ? $ser->serial_no.", " : '';
+                }
+                $unit =$this->super_model->select_column_where("unit", "unit_name", "unit_id", $et->unit_id);
+                $location = $this->super_model->select_column_where("location", "location_name", "location_id", $et->location_id);
+                $set_name = $this->super_model->select_column_where("et_set", "set_name", "set_id", $et->set_id);
+                $set_serial = $this->super_model->select_column_where("et_set", "set_serial_no", "set_id", $et->set_id);
+                if(empty($set_name)){
+                    $unit_price=$et->unit_price;
+                    $total = $et->qty*$unit_price;
+                }else {
+                    $unit_price=$this->super_model->select_column_where("et_set", "set_price", "set_id", $et->set_id);
+                    $total = $et->qty*$unit_price;
+                }
+                $et_set_id = $this->super_model->select_column_where("et_set", "set_id", "set_id", $et->set_id);
+                $count_set = $this->super_model->count_custom("SELECT eh.et_id FROM et_details ed INNER JOIN et_head eh ON eh.et_id = ed.et_id WHERE ed.set_id ='$et_set_id' AND save_temp='0'");
+                if($et->accountability_id!=0 && $et->borrowed==0 && $et->lost==0){
+                    $status = 'Assigned';
+                }else if(($et->accountability_id==0 || $et->accountability_id!=0) && $et->change_location==1){
+                    $status = "Moved to ".$location;
+                }else if($et->accountability_id==0 && $et->damage==0 && $et->change_location==0){
+                    $status = 'Available';
+                }else if($et->borrowed==1){
+                    $status = 'Borrowed';
+                }else if($et->damage==1){
+                    $status = 'Damaged';
+                }else if($et->lost==1){
+                    $status = 'Lost Item / '.$accountability;
+                }
+                $create_date = date("Y-m-d",strtotime($et->create_date));
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('A'.$num, $create_date);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('B'.$num, $category);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('C'.$num, $subcat);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('D'.$num, $et->asset_control_no);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('E'.$num, $et->acquisition_date);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('F'.$num, $et->et_desc);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('G'.$num, $et->brand);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('H'.$num, $et->type);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('I'.$num, $et->model);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('J'.$num, $serial_no);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('K'.$num, $et->qty);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('L'.$num, $unit);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('M'.$num, $et->acquired_by);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('N'.$num, $et->date_issued);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('O'.$num, $accountability);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('P'.$num, $status);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Q'.$num, $et->department);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('R'.$num, $placement);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('S'.$num, $company);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('T'.$num, $rack);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('U'.$num, $et->physical_condition);
+                if($et->set_id!=0 && ($previousId !== $et->set_id)){
+                    $count_set=$count_set-1;
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('V'.$num, $set_name);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('W'.$num, $set_serial);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('X'.$num, $unit_price.' '.$currency);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Y'.$num, $total.' '.$currency);
+                    $objPHPExcel->getActiveSheet()->mergeCells('V'.$num.':V'.($num+$count_set));
+                    $objPHPExcel->getActiveSheet()->mergeCells('W'.$num.':W'.($num+$count_set));
+                    $objPHPExcel->getActiveSheet()->mergeCells('X'.$num.':X'.($num+$count_set));
+                    $objPHPExcel->getActiveSheet()->mergeCells('Y'.$num.':Y'.($num+$count_set));
+                    $objPHPExcel->getActiveSheet()->getStyle('X'.$num.":Y".$num)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+                }else if($et->set_id==0){
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('V'.$num, $set_name);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('W'.$num, $set_serial);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('X'.$num, $unit_price.' '.$currency);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Y'.$num, $total.' '.$currency);
+                    $objPHPExcel->getActiveSheet()->getStyle('X'.$num.":Y".$num)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+                }
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Z'.$num, $et->remarks);
+                $objPHPExcel->getActiveSheet()->getStyle('A'.$num.":Z".$num)->applyFromArray($styleArray);
+                $objPHPExcel->getActiveSheet()->getStyle('A'.$num)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+                $objPHPExcel->getActiveSheet()->getStyle('K'.$num)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+                $objPHPExcel->getActiveSheet()->getStyle('K'.$num)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+                $objPHPExcel->getActiveSheet()->getProtection()->setSheet(true);    
+                $objPHPExcel->getActiveSheet()->protectCells('A'.$num.":Z".$num,'admin');
+                $num++;
+                $count_set--;
+                $previousId = $et->set_id;
+            }
+        }else {
+            $previousId = '';
+            foreach ($this->super_model->custom_query("SELECT * FROM et_head eh INNER JOIN et_details ed ON eh.et_id=ed.et_id WHERE  eh.cancelled='0' AND eh.save_temp='0' AND ed.change_location='1' GROUP BY eh.et_id ORDER BY ed.set_id DESC") AS $et){
+                $unit =$this->super_model->select_column_where("unit", "unit_name", "unit_id", $et->unit_id);
+                $accountability =$this->super_model->select_column_where("employees", "employee_name", "employee_id", $et->accountability_id);
+                $category =$this->super_model->select_column_where("category", "category_name", "category_id", $et->category_id);
+                $subcat =$this->super_model->select_column_where("subcategory", "subcat_name", "subcat_id", $et->subcat_id);
+                $currency = $this->super_model->select_column_where("currency", "currency_name", "currency_id", $et->currency_id);
+                $company = $this->super_model->select_column_where("company", "company_name", "company_id", $et->company_id);
+                $rack = $this->super_model->select_column_where("rack", "rack_name", "rack_id", $et->rack_id);
+                $placement = $this->super_model->select_column_where("placement", "placement_name", "placement_id", $et->placement_id);
+                $serial_no='';
+                foreach($this->super_model->select_custom_where("et_details", "et_id='$et->et_id' ORDER BY set_id ASC") AS $ser){
+                    $serial_no .= (!empty($ser->serial_no)) ? $ser->serial_no.", " : '';
+                }
+                $unit =$this->super_model->select_column_where("unit", "unit_name", "unit_id", $et->unit_id);
+                $location = $this->super_model->select_column_where("location", "location_name", "location_id", $et->location_id);
+                $set_name = $this->super_model->select_column_where("et_set", "set_name", "set_id", $et->set_id);
+                $set_serial = $this->super_model->select_column_where("et_set", "set_serial_no", "set_id", $et->set_id);
+                if(empty($set_name)){
+                    $unit_price=$et->unit_price;
+                    $total = $et->qty*$unit_price;
+                }else {
+                    $unit_price=$this->super_model->select_column_where("et_set", "set_price", "set_id", $et->set_id);
+                    $total = $et->qty*$unit_price;
+                }
+                $et_set_id = $this->super_model->select_column_where("et_set", "set_id", "set_id", $et->set_id);
+                $count_set = $this->super_model->count_custom("SELECT et_head.et_id FROM et_details INNER JOIN et_head ON et_head.et_id = et_details.et_id WHERE accountability_id = '$et->accountability_id' AND set_id ='$et_set_id' AND save_temp='0'");
+                if($et->accountability_id!=0 && $et->borrowed==0 && $et->lost==0){
+                    $status = 'Assigned';
+                }else if(($et->accountability_id==0 || $et->accountability_id!=0) && $et->change_location==1){
+                    $status = "Moved to ".$location;
+                }else if($et->accountability_id==0 && $et->damage==0 && $et->change_location==0){
+                    $status = 'Available';
+                }else if($et->borrowed==1){
+                    $status = 'Borrowed';
+                }else if($et->damage==1){
+                    $status = 'Damaged';
+                }else if($et->lost==1){
+                    $status = 'Lost Item / '.$accountability;
+                }
+                $create_date = date("Y-m-d",strtotime($et->create_date));
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('A'.$num, $create_date);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('B'.$num, $category);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('C'.$num, $subcat);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('D'.$num, $et->asset_control_no);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('E'.$num, $et->acquisition_date);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('F'.$num, $et->et_desc);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('G'.$num, $et->brand);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('H'.$num, $et->type);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('I'.$num, $et->model);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('J'.$num, $serial_no);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('K'.$num, $et->qty);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('L'.$num, $unit);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('M'.$num, $et->acquired_by);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('N'.$num, $et->date_issued);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('O'.$num, $accountability);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('P'.$num, $status);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Q'.$num, $et->department);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('R'.$num, $placement);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('S'.$num, $company);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('T'.$num, $rack);
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('U'.$num, $et->physical_condition);
+                if($et->set_id!=0 && ($previousId !== $et->set_id)){
+                    $count_set=$count_set-1;
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('V'.$num, $set_name);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('W'.$num, $set_serial);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('X'.$num, $unit_price.' '.$currency);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Y'.$num, $total.' '.$currency);
+                    $objPHPExcel->getActiveSheet()->mergeCells('V'.$num.':V'.($num+$count_set));
+                    $objPHPExcel->getActiveSheet()->mergeCells('W'.$num.':W'.($num+$count_set));
+                    $objPHPExcel->getActiveSheet()->mergeCells('X'.$num.':X'.($num+$count_set));
+                    $objPHPExcel->getActiveSheet()->mergeCells('Y'.$num.':Y'.($num+$count_set));
+                    $objPHPExcel->getActiveSheet()->getStyle('X'.$num.":Y".$num)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+                }else if($et->set_id==0){
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('V'.$num, $set_name);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('W'.$num, $set_serial);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('X'.$num, $unit_price.' '.$currency);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Y'.$num, $total.' '.$currency);
+                    $objPHPExcel->getActiveSheet()->getStyle('X'.$num.":Y".$num)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+                }
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Z'.$num, $et->remarks);
+                $objPHPExcel->getActiveSheet()->getStyle('A'.$num.":Z".$num)->applyFromArray($styleArray);
+                $objPHPExcel->getActiveSheet()->getStyle('A'.$num)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+                $objPHPExcel->getActiveSheet()->getStyle('K'.$num)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+                $objPHPExcel->getActiveSheet()->getStyle('K'.$num)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+                $objPHPExcel->getActiveSheet()->getProtection()->setSheet(true);    
+                $objPHPExcel->getActiveSheet()->protectCells('A'.$num.":Z".$num,'admin');
+                $num++;
+                $previousId = $et->set_id;
+            }
+        }
+        $objPHPExcel->getActiveSheet()->getStyle('A2:Z2')->applyFromArray($styleArray);
+        $objPHPExcel->getActiveSheet()->getStyle('A2:Z2')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+        $objPHPExcel->getActiveSheet()->getStyle('A2:Z2')->getFont()->setBold(true)->setName('Arial')->setSize(9.5);
+        $objPHPExcel->getActiveSheet()->getStyle('A1:D1')->getFont()->setBold(true)->setName('Arial Black')->setSize(12);
+        $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+        if (file_exists($exportfilename))
+        unlink($exportfilename);
+        $objWriter->save($exportfilename);
+        unset($objPHPExcel);
+        unset($objWriter);   
+        ob_end_clean();
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="Transfered Items.xlsx"');
+        readfile($exportfilename);
     }
 
     public function report_print_avail(){
@@ -2328,6 +3321,7 @@ class Report extends CI_Controller {
         $data['available_set_qty']= $this->row_set_avail();
         $data['available_qty']= $this->row_avail();
         $data['damage_qty']=$this->super_model->count_custom_where("et_details", "damage='1'");
+        $data['location'] = $this->super_model->select_all_order_by('location', 'location_name', 'ASC');
         if($row_set_avail!=0){
             foreach($this->super_model->select_custom_where('et_head', "accountability_id='0' AND cancelled='0'") AS $et){
                 $unit =$this->super_model->select_column_where("unit", "unit_name", "unit_id", $et->unit_id);
@@ -2358,6 +3352,48 @@ class Report extends CI_Controller {
 
         $this->load->view('report/report_set_avail',$data);
         $this->load->view('template/footer');
+    }
+
+    public function transfer_set_item(){
+        $ed_id = $this->input->post('ed_id');
+        $location = $this->input->post('location');
+        $transfer_date = $this->input->post('transfer_date');
+        $transfer_no = $this->input->post('transfer_no');
+        $data = array(
+            'change_location'=>1,
+            'location_id'=>$location,
+            'date_transfer'=>$transfer_date,
+            'transfer_series'=>$transfer_no,
+        ); 
+        if($this->super_model->update_where("et_details", $data, "ed_id", $ed_id)){
+            $trans = $this->input->post('transfer_no');
+            $assetdetails=explode("-", $trans);
+            $trans_one=$assetdetails[0];
+            $trans_two=$assetdetails[1];
+            $trans_three=$assetdetails[2];
+            $trans_four =$assetdetails[3];
+            $trans_five = (!empty($assetdetails[4])) ? $assetdetails[4] : '';
+            if(!empty($trans_one) && !empty($trans_two) && !empty($trans_three) && !empty($trans_four) && !empty($trans_five)){
+                $subcat_prefix1=$assetdetails[0];
+                $subcat_prefix2=$assetdetails[1];
+                $subcat_prefix3=$assetdetails[2];
+                $subcat_prefix4=$assetdetails[3];
+                $subcat_prefix=$subcat_prefix1."-".$subcat_prefix2."-".$subcat_prefix3."-".$subcat_prefix4;
+                $series = $assetdetails[4];
+            }else {
+                $subcat_prefix1=$assetdetails[0];
+                $subcat_prefix2=$assetdetails[1];
+                $subcat_prefix3=$assetdetails[2];
+                $subcat_prefix=$subcat_prefix1."-".$subcat_prefix2."-".$subcat_prefix3;
+                $series = $assetdetails[3]; 
+            }
+            $trans_data= array(
+                'prefix'=>$subcat_prefix,
+                'series'=>$series
+            );
+            $this->super_model->insert_into("transfer_series", $trans_data);
+        }
+        echo "<script>alert('Successfully Transfered!'); window.location = '".base_url()."report/report_set_avail';</script>";
     }
 
     public function set_print_avail1(){  
@@ -5272,10 +6308,20 @@ class Report extends CI_Controller {
                         $et_set_id = $this->super_model->select_column_where("et_set","set_id",'set_id',$d->set_id);
                         $count_set = $this->super_model->select_count_join_inner("return_details","et_details", "set_id ='$et_set_id' AND return_id = '$det->return_id'","ed_id");
                         $data['count_set']=$count_set;
-                        $set_price = $this->super_model->select_column_where("et_set","set_price",'set_id',$d->set_id);
-                        $set_cur = $this->super_model->select_column_where("et_set","set_currency",'set_id',$d->set_id);
-                        $set_currency = $this->super_model->select_column_where("currency","currency_name",'currency_id',$set_cur);
-                        $set_total=$qty*$set_price;
+
+                        $count_et = $this->super_model->count_custom_where("et_details", "set_id ='$et_set_id'");
+                        $count_return = $this->super_model->select_count_join_inner("return_details","et_details", "set_id ='$et_set_id' AND return_id = '$det->return_id'","ed_id");
+                        if($count_et<=$count_return){
+                            $set_price = $this->super_model->select_column_where("et_set","set_price",'set_id',$d->set_id);
+                            $set_cur = $this->super_model->select_column_where("et_set","set_currency",'set_id',$d->set_id);
+                            $set_currency = $this->super_model->select_column_where("currency","currency_name",'currency_id',$set_cur);
+                            $set_total=$qty*$set_price;
+                        }else{
+                            $set_price = "0.00";
+                            $set_cur = "";
+                            $set_currency = "";
+                            $set_total="0.00";
+                        }
                     }
                 }
 
@@ -5310,7 +6356,7 @@ class Report extends CI_Controller {
 
     public function ars_report_return(){  
         $this->load->view('template/header');
-        $this->load->view('template/navbar',$this->dropdown);
+        //$this->load->view('template/navbar',$this->dropdown);
         $data['id']=$this->uri->segment(3);
         $id=$this->uri->segment(3);
         foreach($this->super_model->select_row_where('return_head','return_id',$id) AS $ret){
@@ -5352,10 +6398,20 @@ class Report extends CI_Controller {
                         $et_set_id = $this->super_model->select_column_where("et_set","set_id",'set_id',$d->set_id);
                         $count_set = $this->super_model->select_count_join_inner("return_details","et_details", "set_id ='$et_set_id' AND return_id = '$det->return_id'","ed_id");
                         $data['count_set']=$count_set;
-                        $set_price = $this->super_model->select_column_where("et_set","set_price",'set_id',$d->set_id);
-                        $set_cur = $this->super_model->select_column_where("et_set","set_currency",'set_id',$d->set_id);
-                        $set_currency = $this->super_model->select_column_where("currency","currency_name",'currency_id',$set_cur);
-                        $set_total=$qty*$set_price;
+
+                        $count_et = $this->super_model->count_custom_where("et_details", "set_id ='$et_set_id'");
+                        $count_return = $this->super_model->select_count_join_inner("return_details","et_details", "set_id ='$et_set_id' AND return_id = '$det->return_id'","ed_id");
+                        if($count_et<=$count_return){
+                            $set_price = $this->super_model->select_column_where("et_set","set_price",'set_id',$d->set_id);
+                            $set_cur = $this->super_model->select_column_where("et_set","set_currency",'set_id',$d->set_id);
+                            $set_currency = $this->super_model->select_column_where("currency","currency_name",'currency_id',$set_cur);
+                            $set_total=$qty*$set_price;
+                        }else{
+                            $set_price = "0.00";
+                            $set_cur = "";
+                            $set_currency = "";
+                            $set_total="0.00";
+                        }
                     }
                 }
 
@@ -6341,15 +7397,16 @@ class Report extends CI_Controller {
                 $location = $this->super_model->select_column_where("location", "location_name", "location_id", $et->location_id);
                 $set_name = $this->super_model->select_column_where("et_set", "set_name", "set_id", $et->set_id);
                 $set_serial = $this->super_model->select_column_where("et_set", "set_serial_no", "set_id", $et->set_id);
-                if(empty($set_name)){
-                    $unit_price=$et->unit_price;
-                    $total = $et->qty*$unit_price;
-                }else {
-                    $unit_price=$this->super_model->select_column_where("et_set", "set_price", "set_id", $et->set_id);
-                    $total = $et->qty*$unit_price;
-                }
                 $et_set_id = $this->super_model->select_column_where("et_set", "set_id", "set_id", $et->set_id);
-                $count_set = $this->super_model->count_custom("SELECT eh.et_id FROM et_details ed INNER JOIN et_head eh ON eh.et_id = ed.et_id WHERE ed.set_id ='$et_set_id' AND save_temp='0'");
+                $count_set = $this->super_model->count_custom("SELECT eh.et_id FROM et_details ed INNER JOIN et_head eh ON eh.et_id = ed.et_id WHERE ed.set_id ='$et_set_id' AND save_temp='0' AND $query");
+                $count_set_id = $this->super_model->count_rows_where("et_details","set_id",$et_set_id);
+                if(empty($set_name)){
+                    $unit_price=$et->unit_price.' '.$currency;
+                    $total = $et->qty*$unit_price.' '.$currency;
+                }else if($count_set==$count_set_id) {
+                    $unit_price=$this->super_model->select_column_where("et_set", "set_price", "set_id", $et->set_id).' '.$currency;
+                    $total = $et->qty*$unit_price.' '.$currency;
+                }
                 if($et->accountability_id!=0 && $et->borrowed==0 && $et->lost==0){
                     $status = 'Assigned';
                 }else if($et->accountability_id==0 && $et->change_location==1){
@@ -6389,8 +7446,8 @@ class Report extends CI_Controller {
                     $count_set=$count_set-1;
                     $objPHPExcel->setActiveSheetIndex(0)->setCellValue('V'.$num, $set_name);
                     $objPHPExcel->setActiveSheetIndex(0)->setCellValue('W'.$num, $set_serial);
-                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('X'.$num, $unit_price.' '.$currency);
-                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Y'.$num, $total.' '.$currency);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('X'.$num, $unit_price);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Y'.$num, $total);
                     $objPHPExcel->getActiveSheet()->mergeCells('V'.$num.':V'.($num+$count_set));
                     $objPHPExcel->getActiveSheet()->mergeCells('W'.$num.':W'.($num+$count_set));
                     $objPHPExcel->getActiveSheet()->mergeCells('X'.$num.':X'.($num+$count_set));
@@ -6399,8 +7456,8 @@ class Report extends CI_Controller {
                 }else if($et->set_id==0){
                     $objPHPExcel->setActiveSheetIndex(0)->setCellValue('V'.$num, $set_name);
                     $objPHPExcel->setActiveSheetIndex(0)->setCellValue('W'.$num, $set_serial);
-                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('X'.$num, $unit_price.' '.$currency);
-                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Y'.$num, $total.' '.$currency);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('X'.$num, $unit_price);
+                    $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Y'.$num, $total);
                     $objPHPExcel->getActiveSheet()->getStyle('X'.$num.":Y".$num)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
                 }
                 $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Z'.$num, $et->remarks);
@@ -6700,7 +7757,7 @@ class Report extends CI_Controller {
                     $total = $et->qty*$unit_price;
                 }
                 $et_set_id = $this->super_model->select_column_where("et_set", "set_id", "set_id", $et->set_id);
-                $count_set = $this->super_model->count_custom("SELECT et_head.et_id FROM et_details INNER JOIN et_head ON et_head.et_id = et_details.et_id WHERE set_id ='$et_set_id' AND save_temp='1'");
+                $count_set = $this->super_model->count_custom("SELECT et_head.et_id FROM et_details INNER JOIN et_head ON et_head.et_id = et_details.et_id WHERE set_id ='$et_set_id' AND save_temp='1' AND $query");
                 if($et->accountability_id!=0 && $et->borrowed==0 && $et->lost==0){
                     $status = 'Assigned';
                 }else if($et->accountability_id==0 && $et->change_location==1){

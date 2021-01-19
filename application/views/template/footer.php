@@ -202,6 +202,11 @@
             $("#ed_id").val(ed_id);
             $("#et_id").val(et_id);
         });
+
+        $(document).on("click", "#itemTransfer", function () {
+            var ed_id = $(this).attr("data-id");
+            $("#ed_ids").val(ed_id);
+        });
     </script>
 
     <script type="text/javascript">

@@ -254,6 +254,8 @@ class Repair extends CI_Controller {
             $et_desc=$this->super_model->select_column_where("et_head","et_desc","et_id",$d->et_id);
             $qty=$this->super_model->select_column_where("et_head","qty","et_id",$d->et_id);
             $unit_price=$this->super_model->select_column_where("et_details","unit_price","ed_id",$d->ed_id);
+            $currency_id = $this->super_model->select_column_where("et_details", "currency_id", "ed_id", $d->ed_id);
+            $currency = $this->super_model->select_column_where("currency", "currency_name", "currency_id", $currency_id);
             $brand=$this->super_model->select_column_where("et_details","brand","ed_id",$d->ed_id);
             $type=$this->super_model->select_column_where("et_details","type","ed_id",$d->ed_id);
             $serial_no=$this->super_model->select_column_where("et_details","serial_no","ed_id",$d->ed_id);
@@ -276,7 +278,7 @@ class Repair extends CI_Controller {
             $objPHPExcel->setActiveSheetIndex(0)->setCellValue('L'.$num, $qty);
             $objPHPExcel->setActiveSheetIndex(0)->setCellValue('M'.$num, $unit_name);
             $objPHPExcel->setActiveSheetIndex(0)->setCellValue('N'.$num, $acquisition_date);
-            $objPHPExcel->setActiveSheetIndex(0)->setCellValue('O'.$num, $unit_price);
+            $objPHPExcel->setActiveSheetIndex(0)->setCellValue('O'.$num, $unit_price." ".$currency);
             $objPHPExcel->setActiveSheetIndex(0)->setCellValue('P'.$num, $d->po_si_no);
             $objPHPExcel->setActiveSheetIndex(0)->setCellValue('Q'.$num, $submitted_by);
             $objPHPExcel->setActiveSheetIndex(0)->setCellValue('R'.$num, $d->incident_description);
