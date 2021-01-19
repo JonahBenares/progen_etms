@@ -173,6 +173,7 @@ class Encode extends CI_Controller {
             ); 
               
         }
+        $this->load->view('template/print_head');
         $this->load->view('encode/encode_report',$data);
         $this->load->view('template/footer');
     }

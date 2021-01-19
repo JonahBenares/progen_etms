@@ -1248,6 +1248,7 @@ class Report extends CI_Controller {
             ); 
               
         }
+        $this->load->view('template/print_head');
         $this->load->view('report/encode_report',$data);
         $this->load->view('template/footer');
     }
@@ -3438,6 +3439,7 @@ class Report extends CI_Controller {
         }else {
             $data['details'] = array();
         }
+        $this->load->view('template/print_head');
         $this->load->view('report/set_print_avail1',$data);
         $this->load->view('template/footer');
     }
@@ -3477,6 +3479,7 @@ class Report extends CI_Controller {
                 $data['set'][]=$count_set;
             }
         }
+        $this->load->view('template/print_head');        
         $this->load->view('report/set_print_avail',$data);
         $this->load->view('template/footer');
     }
@@ -3536,6 +3539,7 @@ class Report extends CI_Controller {
                 $data['set'][]=$count_set;
             }
         }
+        $this->load->view('template/print_head');
         $this->load->view('report/set_print_account',$data);
         $this->load->view('template/footer');
     }
@@ -4195,6 +4199,7 @@ class Report extends CI_Controller {
                 } 
             } 
         }
+        $this->load->view('template/print_head');
         $this->load->view('report/print_history',$data);
         $this->load->view('template/footer');
     }
@@ -5998,6 +6003,7 @@ class Report extends CI_Controller {
                 'remarks'=>$dam->remarks
             );
         }
+        $this->load->view('template/print_head');
         $this->load->view('report/damage_report',$data);
         $this->load->view('template/footer');
     }
@@ -6083,6 +6089,7 @@ class Report extends CI_Controller {
                 'remarks'=>$dam->remarks
             );
         }
+        $this->load->view('template/print_head');
         $this->load->view('report/damage_report_nav',$data);
         $this->load->view('template/footer');
     }
@@ -6102,6 +6109,7 @@ class Report extends CI_Controller {
         $this->load->view('template/navbar',$this->dropdown); 
         $data['employee'] = $this->super_model->select_all_order_by("employees","employee_name","ASC"); 
         $data['user_id'] = $_SESSION['fullname'];
+        $this->load->view('template/print_head');
         $this->load->view('report/aaf_assign_rep',$data);
         $this->load->view('template/footer');
     }
@@ -6350,6 +6358,7 @@ class Report extends CI_Controller {
                 'return_id'=>$ret->return_id,
             ); 
         }
+        $this->load->view('template/print_head');
         $this->load->view('report/ars_report',$data);
         $this->load->view('template/footer');
     }
@@ -6476,6 +6485,7 @@ class Report extends CI_Controller {
                 );
             }
         }
+        $this->load->view('template/print_head');
         $this->load->view('report/ars_report_return',$data);
         $this->load->view('template/footer');
     }
@@ -6520,6 +6530,7 @@ class Report extends CI_Controller {
                 "remarks"=>$info->transfer_remarks
             );
         }
+        $this->load->view('template/print_head');
         $this->load->view('report/transfer_report',$data);
         $this->load->view('template/footer');
     }
@@ -6725,6 +6736,7 @@ class Report extends CI_Controller {
             $data['date_issued'] =  '';
             $data['user_id'] =  '';
         }
+        $this->load->view('template/print_head');
         $this->load->view('report/seaaf_report',$data);
         $this->load->view('template/footer');
     }
@@ -6816,6 +6828,7 @@ class Report extends CI_Controller {
                 );
             }  
         }
+        $this->load->view('template/print_head');
         $this->load->view('report/acf_report',$data);
         $this->load->view('template/footer');
     }
@@ -7930,6 +7943,7 @@ class Report extends CI_Controller {
     public function damage_report_blank(){  
         $this->load->view('template/header'); 
         $this->load->view('template/navbar',$this->dropdown); 
+        $this->load->view('template/print_head');
         $this->load->view('report/damage_report_blank');
         $this->load->view('template/footer');
     }
@@ -7937,6 +7951,7 @@ class Report extends CI_Controller {
      public function lost_item(){  
         $this->load->view('template/header'); 
         $this->load->view('template/navbar',$this->dropdown); 
+        $this->load->view('template/print_head');
         $this->load->view('report/lost_item');
         $this->load->view('template/footer');
     }
@@ -7992,6 +8007,7 @@ class Report extends CI_Controller {
         $data['aaf_no'] = $this->super_model->select_column_where("employees","aaf_no","employee_id",$empid);
         $data['employee'] = $this->super_model->select_all_order_by("employees","employee_name","ASC"); 
         $data['user_id'] = $_SESSION['fullname'];
+        $this->load->view('template/print_head');
         $this->load->view('report/replace_item',$data);
         $this->load->view('template/footer');
     }

@@ -45,7 +45,7 @@
         }
     }
 </style>
-<body style="padding-top:20px">
+<!-- <body style="padding-top:20px">
     <div class="container">
         <table class = "table-main " style = "width:100%">
             <tr>
@@ -56,7 +56,7 @@
                    <p style="margin: 0px"> <strong><?php echo COMPANY_NAME;?></strong></p>
                     <p style="margin: 0px"><?php echo ADDRESS;?></p>
                     <p style="margin: 0px"><?php echo TEL_NO;?></p>
-                </td>
+                </td> -->
                 <td style="padding:10px;border-bottom: 2px solid #000;border-left: 2px solid #000" width="50%" align="center">
                     <p><strong>EQUIPMENT/TOOLS DAMAGE REPORT</strong></p>
                 </td>

@@ -84,11 +84,11 @@ defined('EXIT_DATABASE')       OR define('EXIT_DATABASE', 8); // database error
 defined('EXIT__AUTO_MIN')      OR define('EXIT__AUTO_MIN', 9); // lowest automatically-assigned error code
 defined('EXIT__AUTO_MAX')      OR define('EXIT__AUTO_MAX', 125); // highest automatically-assigned error code
 
-define('LOGO','assets/default/logo_cenpri.png');
-define('COMPANY_NAME','CENTRAL NEGROS POWER RELIABILITY, INC.');
-define('ADDRESS','Office: 88 Corner Rizal-Mabini Sts., Bacolod City');
-define('TEL_NO','Tel. No.: (034) 435-1932/476-7382');
-define('TELFAX','Telefax: (034) 435-1932');
-define('ADDRESS_2','Plant Site: Purok San Jose, Barangay Calumangan, Bago City');
+define('LOGO','assets/default/logo_progen.png');
+define('COMPANY_NAME','PROGEN Dieseltech Services Corp.');
+define('ADDRESS','Office: Purok San Jose, Brgy. Calumangan, Bago City, ');
+define('TEL_NO','Tel. No.: 476 - 7382');
+define('TELFAX','');
+define('ADDRESS_2','Negros Occidental, Philippines 6101');
 
  

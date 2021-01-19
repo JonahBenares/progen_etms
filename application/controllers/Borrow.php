@@ -277,6 +277,7 @@ class Borrow extends CI_Controller {
                 'series'=>$borrow->borrow_series,
             );
         }
+        $this->load->view('template/print_head');
         $this->load->view('borrow/borrow_add',$data);
         $this->load->view('template/footer');
     }
@@ -328,6 +329,7 @@ class Borrow extends CI_Controller {
                 }
             }
         }
+        $this->load->view('template/print_head');
         $this->load->view('borrow/borrow_view',$data);
         $this->load->view('template/footer');
     }
@@ -388,6 +390,7 @@ class Borrow extends CI_Controller {
                 }
             }
         }
+        $this->load->view('template/print_head');
         $this->load->view('borrow/borrow_print',$data);
         $this->load->view('template/footer');
     }

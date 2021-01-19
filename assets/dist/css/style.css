@@ -2081,7 +2081,7 @@ animation-name: tada;
 
 
 .btn-primary-alt {
-background-image: linear-gradient(45deg, red, yellow);
+background-image: linear-gradient(45deg, #1be5ff, #005def);
 transition: 0.3s ease-out!important;  
 background-position: center;
 background-size: 210% 150%;
@@ -2092,23 +2092,23 @@ color: #fff !important;
 
 
 .btn-primary-alt:focus, .btn-primary-alt:active, .btn-primary-alt.active {
-background: linear-gradient(45deg, #e43a06, #f3c75e);
+background: linear-gradient(45deg,  #1be5ff, #005def);
 background-position: center;
 background-size: 210% 150%;
 background-repeat: no-repeat;}
 .btn-primary-alt.dropdown-toggle {
-background: linear-gradient(45deg, #e43a06, #f3c75e);
+background: linear-gradient(45deg,  #1be5ff, #005def);
 background-position: center;
 background-size: 210% 150%;
 background-repeat: no-repeat;  }
 .btn-primary-alt.dropdown-toggle:hover, .btn-primary-alt.dropdown-toggle:focus {
-background: linear-gradient(45deg, #e43a06, #f3c75e);
+background: linear-gradient(45deg,  #1be5ff, #005def);
 background-position: center;
 background-size: 210% 150%;
 background-repeat: no-repeat;}
 .btn-primary-alt:not([disabled]):not(.disabled):active, .btn-primary-alt:not([disabled]):not(.disabled).active,
 .show > .btn-primary-alt.dropdown-toggle {
-background: linear-gradient(45deg, #e43a06, #f3c75e);
+background: linear-gradient(45deg,  #1be5ff, #005def);
 background-position: center;
 background-size: 210% 150%;
 background-repeat: no-repeat;}
@@ -10820,7 +10820,7 @@ Preloader
   width: 0;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
-  border: 0 solid #ff7b02;
+  border: 0 solid #005def;
   border-radius: 50%;
   -webkit-animation: loader-figure 1.15s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
   -moz-animation: loader-figure 1.15s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
@@ -10838,7 +10838,7 @@ Preloader
   font-size: 0.875em;
   letter-spacing: 0.1em;
   line-height: 1.5em;
-  color: #ff7b02;
+  color: #005def;
   white-space: nowrap;
   -webkit-animation: loader-label 1.15s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
   -moz-animation: loader-label 1.15s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
@@ -11079,7 +11079,7 @@ html {
   min-height: 100%; }
 
 a {
-  color:#fb6902; }
+  color:#005def; }
 
 a:hover,
 a:focus {
@@ -13323,7 +13323,7 @@ File: scss
 }
 
   div.panel>a.acc:hover{
-    background-image: linear-gradient(to right, #ff6600 10%, #f7751f 30% , #1d2029 70%);
+    background-image: linear-gradient(to right, #1be5ff 10%, #005def 30% , #1d2029 70%);
     transition: 0.2s ease-out;
   }
 
@@ -22252,7 +22252,7 @@ input.bg-white{
   font-weight: 505;
 }
 .bg-primary-alt{
-  background-image: linear-gradient(45deg, #ff6b30, #f7be65)!important;
+  background-image: linear-gradient(45deg, #005def, #1be5ff)!important;
   color: #fff;
 }
 .bg-danger-alt{

@@ -2,7 +2,7 @@
 <script src="<?php echo base_url(); ?>assets/dist/js/report.js"></script>
 <link href="<?php echo base_url(); ?>assets/dist/css/printable.css" rel="stylesheet">
 
-<div class="page-wrapper">
+<!-- <div class="page-wrapper">
     <div class="container-fluid m-t-20">        
         <table class = "table-main " style = "width:100%">
             <tr>
@@ -13,7 +13,7 @@
                    <p style="margin: 0px"> <strong><?php echo COMPANY_NAME;?></strong></p>
                     <p style="margin: 0px"><?php echo ADDRESS;?></p>
                     <p style="margin: 0px"><?php echo TEL_NO;?></p>
-                </td>
+                </td> -->
                 <td style="padding:10px;border-bottom: 2px solid #000;border-left: 2px solid #000" width="50%" align="center">
                     <h5><strong>ASSET ACCOUNTABILITY FORM</strong></h5>
                 </td>
