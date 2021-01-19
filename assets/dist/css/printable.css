@@ -1,0 +1,65 @@
+p,h5{font-size: 14px!important}
+@media print{
+    .hid, .left-sidebar, .topbar, #btn-group-print, #printBtn{
+        display: none
+    }
+    .page-wrapper,body{
+        background-color: #fff;
+    }
+    .fixed-layout .page-wrapper {
+        padding-top: 0px;
+    }
+    .page-wrapper{font-size: 16px!important}
+ }
+ .page-wrapper{font-size: 14px!important}
+.table-main{
+    border:2px solid black;
+    border-bottom:0px solid black;
+}
+#head{
+    font-size: 14px;
+}
+.page-wrapper,body{
+    background-color: #fff;
+}
+.table-bordered>tbody>tr>td, 
+.table-bordered>tbody>tr>th, 
+.table-bordered>tfoot>tr>td, 
+.table-bordered>tfoot>tr>th, 
+.table-bordered>thead>tr>td, 
+.table-bordered>thead>tr>th {
+    border: 1px solid #000!important;
+}
+.nomarg{
+    margin: 0px;
+}
+p, .main-tab, h5, label.nomarg{
+    color:#000;
+}
+.select {
+   text-align-last: center;
+   text-align: center;
+   -ms-text-align-last: center;
+   -moz-text-align-last: center;
+    padding: 5px 0px!important;
+    width:100%;
+    border:0px;
+    background:none;
+    text-align:center;
+    -webkit-appearance: none;
+}
+@media print{
+    #print, #printhide{
+        display: none;
+    }
+    p,h5{font-size: 12px!important;}
+}
+.cancel{
+    background-image: url('../../../assets/images/cancel.png')!important;
+    background-repeat:no-repeat!important;
+    background-size: contain!important;
+    background-position: center center!important;
+}
+ul#name-item{
+    width: 40%;
+}
