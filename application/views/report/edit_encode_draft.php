@@ -1,6 +1,29 @@
 <script src="<?php echo base_url(); ?>assets/dist/js/jquery.js"></script>
 <script src="<?php echo base_url(); ?>assets/dist/js/encode.js"></script>
+<script>
+        var sa = 1;
+        $("body").on("click", ".addInspection", function() {
+            sa++;
+            var $append = $(this).parents('.append');
+            var nextHtml = $append.clone().find("input").val("").end();
+            // var nextHtml = $append.clone().find("textarea").val("").end();
+            nextHtml.attr('id', 'append' + sa);
+            var hasRmBtn = $('.remInspection', nextHtml).length > 0;
+            if (!hasRmBtn) {
+                var rm_4 = "<button class='btn-danger btn-sm btn remInspection' style='color:white'><span class='fa fa-times'></span></button>"
+                $('.addmoreinspection', nextHtml).append(rm_4);
+            }
+            $append.after(nextHtml);
+            // $(".addInspection").hide();
+            // var btn_surgeries = document.getElementById("btn_inspection");
+            // btn_surgeries.style.display = "block"; 
 
+        });
+
+        $("body").on("click", ".remInspection", function() {
+            $(this).parents('.append').remove();
+        });
+</script>
 <div class="page-wrapper">
     <div class="container-fluid ">
         <div class="row page-titles">
@@ -240,7 +263,96 @@
                                     </div>
                                 </div> 
                             </div>
-                            
+                            <br>
+                            <div class = "row">
+                                <div class="col-12">
+                                    <table class="table-bordered" width="100%">
+                                         <tr>
+                                            <td class="py-1 px-1" colspan="5">
+                                                <h6>Quarterly Inspection</h6>
+                                            </td>
+                                            <!-- <td class="py-1 px-1 addmoreinspection" width="2%" align="center">
+                                                <button type='button' class="btn btn-xs btn-primary addInspection"><i class="fa fa-plus"></i></button>
+                                            </td> -->
+                                        </tr>
+                                        <tr>
+                                            <td class="p-1" width="15%">Date of Inspection</td>
+                                             <td class="p-1" width="30%">Inspected by</td>
+                                            <td class="p-1" width="20%">Status</td>
+                                            <td class="p-1" width="30%" >Remarks</td>
+                                            <td class="py-1 px-1 " width="2%" align="center"> 
+                                                <!-- <button class="btn btn-xs btn-danger"><i class="fa fa-times"></i></button> -->
+                                                <!-- <button type="button" class="btn btn-xs btn-primary addInspection"><i class="fa fa-plus"></i></button> -->
+                                            </td>
+                                        </tr>
+                                         <?php 
+                                            if(!empty($inspection)){
+                                            foreach($inspection AS $i){  
+                                        ?>
+                                        <tr class="">
+                                         <td class="p-0">
+                                                <!-- <input type="date" name="date_of_inspection[]" value = "<?php echo $i['date'];?>" class="form-control text-center" style="font-size:12px;padding:1px!important;border:0px solid #000"> -->
+                                                <?php echo $i['date'];?>
+                                            </td>
+                                            <td class="p-0">
+                                                <!-- <select name="inspected_by[]" class="form-control" style="font-size:12px;padding:1px!important;border:0px solid #000">
+                                                    <option value = "">--Select Employee--</option>
+                                                    <?php foreach($employees AS $e){ ?>
+                                                    <option value = "<?php echo $e->employee_id; ?>" <?php echo (($i['inspected_by'] == $e->employee_id) ? ' selected' : '');?>><?php echo $e->employee_name;?></option>
+                                                    <?php } ?>
+                                                </select> -->
+                                                <?php echo $i['inspected_by'];?>
+                                            </td>
+                                            <td class="p-0">
+                                               <!--  <select name="status[]" class="form-control" style="font-size:12px;padding:1px!important;border:0px solid #000">
+                                                    <option value = "">--Select Status--</option>
+                                                    <?php foreach($ins_status AS $ie){ ?>
+                                                    <option value = "<?php echo $ie->inspection_status_id; ?>" <?php echo (($i['status'] == $ie->inspection_status_id) ? ' selected' : '');?>><?php echo $ie->status;?></option>
+                                                    <?php } ?>
+                                                </select> -->
+                                                <?php echo $i['status'];?>
+                                            </td>
+                                             <td class="p-0">
+                                                <!-- <textarea class="m-0" rows="2" name="remarks[]" style="width:100%;height:100%;font-size:12px;padding:2px!important"><?php echo $i['remarks'];?></textarea> -->
+                                                <?php echo $i['ins_remarks'];?>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                        <?php } } ?>
+                                        <tr class="append">
+                                           <td class="p-0">
+                                                <input type="date" name="date_of_inspection[]" class="form-control text-center" style="font-size:12px;padding:1px!important;border:0px solid #000">
+                                            </td>
+                                            <td class="p-0">
+                                                <select name="inspected_by[]" class="form-control" style="font-size:12px;padding:1px!important;border:0px solid #000">
+                                                    <option value = "">--Select Employee--</option>
+                                                    <?php foreach($employees AS $e){ ?>
+                                                    <option value = "<?php echo $e->employee_id; ?>"><?php echo $e->employee_name;?></option>
+                                                    <?php } ?>
+                                                </select>
+                                            </td>
+                                            <td class="p-0">
+                                                <select name="status[]" class="form-control" style="font-size:12px;padding:1px!important;border:0px solid #000">
+                                                    <option value = "">--Select Status--</option>
+                                                    <?php foreach($ins_status AS $ie){ ?>
+                                                    <option value = "<?php echo $ie->inspection_status_id; ?>"><?php echo $ie->status;?></option>
+                                                    <?php } ?>
+                                                </select>
+                                            </td>
+                                             <td class="p-0">
+                                                <!-- <textarea class="m-0" rows="2" name="ins_remarks[]" style="width:100%;height:100%;font-size:12px;padding:2px!important"></textarea> -->
+                                                <input type="text" class="m-0" rows="2" name="ins_remarks[]" style="font-size:12px;padding:1px!important;border:0px solid #000">
+                                            </td>
+                                            <td width="10%" align="center" class="addmoreinspection">
+                                                <button type="button" id="btn_inspection" class="btn btn-sm btn-primary addInspection" style="display:none;"><span class="fa fa-plus"></span></button>
+                                                <button type="button" id="btn" class="btn btn-sm btn-primary addInspection"><span class="fa fa-plus"></span></button>
+                                                <!-- <button class="btn-danger btn-sm btn " style="color:white"><span class="fa fa-times"></span></button> -->
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div> 
+                            </div>
+                            <br>
                             <div class="row border-class" >
                                 <style type="text/css">
                                     #img-check-none1-<?php echo $x?>{
@@ -423,7 +535,96 @@
                                     </div>
                                 </div> 
                             </div>
-                            
+                            <br>
+                            <div class = "row">
+                                <div class="col-12">
+                                    <table class="table-bordered" width="100%">
+                                         <tr>
+                                            <td class="py-1 px-1" colspan="5">
+                                                <h6>Quarterly Inspection</h6>
+                                            </td>
+                                            <!-- <td class="py-1 px-1 addmoreinspection" width="2%" align="center">
+                                                <button type='button' class="btn btn-xs btn-primary addInspection"><i class="fa fa-plus"></i></button>
+                                            </td> -->
+                                        </tr>
+                                        <tr>
+                                            <td class="p-1" width="15%">Date of Inspection</td>
+                                             <td class="p-1" width="30%">Inspected by</td>
+                                            <td class="p-1" width="20%">Status</td>
+                                            <td class="p-1" width="30%" >Remarks</td>
+                                            <td class="py-1 px-1 " width="2%" align="center"> 
+                                                <!-- <button class="btn btn-xs btn-danger"><i class="fa fa-times"></i></button> -->
+                                                <!-- <button type="button" class="btn btn-xs btn-primary addInspection"><i class="fa fa-plus"></i></button> -->
+                                            </td>
+                                        </tr>
+                                         <?php 
+                                            if(!empty($inspection)){
+                                            foreach($inspection AS $i){  
+                                        ?>
+                                        <tr class="">
+                                         <td class="p-0">
+                                                <!-- <input type="date" name="date_of_inspection[]" value = "<?php echo $i['date'];?>" class="form-control text-center" style="font-size:12px;padding:1px!important;border:0px solid #000"> -->
+                                                <?php echo $i['date'];?>
+                                            </td>
+                                            <td class="p-0">
+                                                <!-- <select name="inspected_by[]" class="form-control" style="font-size:12px;padding:1px!important;border:0px solid #000">
+                                                    <option value = "">--Select Employee--</option>
+                                                    <?php foreach($employees AS $e){ ?>
+                                                    <option value = "<?php echo $e->employee_id; ?>" <?php echo (($i['inspected_by'] == $e->employee_id) ? ' selected' : '');?>><?php echo $e->employee_name;?></option>
+                                                    <?php } ?>
+                                                </select> -->
+                                                <?php echo $i['inspected_by'];?>
+                                            </td>
+                                            <td class="p-0">
+                                               <!--  <select name="status[]" class="form-control" style="font-size:12px;padding:1px!important;border:0px solid #000">
+                                                    <option value = "">--Select Status--</option>
+                                                    <?php foreach($ins_status AS $ie){ ?>
+                                                    <option value = "<?php echo $ie->inspection_status_id; ?>" <?php echo (($i['status'] == $ie->inspection_status_id) ? ' selected' : '');?>><?php echo $ie->status;?></option>
+                                                    <?php } ?>
+                                                </select> -->
+                                                <?php echo $i['status'];?>
+                                            </td>
+                                             <td class="p-0">
+                                                <!-- <textarea class="m-0" rows="2" name="remarks[]" style="width:100%;height:100%;font-size:12px;padding:2px!important"><?php echo $i['remarks'];?></textarea> -->
+                                                <?php echo $i['ins_remarks'];?>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                        <?php } } ?>
+                                        <tr class="append">
+                                           <td class="p-0">
+                                                <input type="date" name="date_of_inspection[]" class="form-control text-center" style="font-size:12px;padding:1px!important;border:0px solid #000">
+                                            </td>
+                                            <td class="p-0">
+                                                <select name="inspected_by[]" class="form-control" style="font-size:12px;padding:1px!important;border:0px solid #000">
+                                                    <option value = "">--Select Employee--</option>
+                                                    <?php foreach($employees AS $e){ ?>
+                                                    <option value = "<?php echo $e->employee_id; ?>"><?php echo $e->employee_name;?></option>
+                                                    <?php } ?>
+                                                </select>
+                                            </td>
+                                            <td class="p-0">
+                                                <select name="status[]" class="form-control" style="font-size:12px;padding:1px!important;border:0px solid #000">
+                                                    <option value = "">--Select Status--</option>
+                                                    <?php foreach($ins_status AS $ie){ ?>
+                                                    <option value = "<?php echo $ie->inspection_status_id; ?>"><?php echo $ie->status;?></option>
+                                                    <?php } ?>
+                                                </select>
+                                            </td>
+                                             <td class="p-0">
+                                                <!-- <textarea class="m-0" rows="2" name="ins_remarks[]" style="width:100%;height:100%;font-size:12px;padding:2px!important"></textarea> -->
+                                                <input type="text" class="m-0" rows="2" name="ins_remarks[]" style="font-size:12px;padding:1px!important;border:0px solid #000">
+                                            </td>
+                                            <td width="10%" align="center" class="addmoreinspection">
+                                                <button type="button" id="btn_inspection" class="btn btn-sm btn-primary addInspection" style="display:none;"><span class="fa fa-plus"></span></button>
+                                                <button type="button" id="btn" class="btn btn-sm btn-primary addInspection"><span class="fa fa-plus"></span></button>
+                                                <!-- <button class="btn-danger btn-sm btn " style="color:white"><span class="fa fa-times"></span></button> -->
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div> 
+                            </div>
+                            <br>
                             <div class="row border-class" >
                                 <style type="text/css">
                                     #img-check-none1-<?php echo $x?>{
