@@ -15,7 +15,7 @@
                 </div>
             </div>
         </div>
-        <!--Modal Start -->
+       <!--Modal Start -->
         <div class="modal fade" id="damage_modal" tabindex="-1" role="dialog" aria-labelledby="mediumModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-md" role="document">
                 <div class="modal-content">
@@ -26,16 +26,29 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form method="POST" action = "<?php echo base_url();?>repair/export_damage">
+                        <form id="damageExportForm" method="POST" action = "<?php echo base_url();?>repair/export_damage">
                             <div class="form-group">
                                 <div class="row">
-                                    <div class="col-lg-6">
+                                    <div class="col-lg-4 col-xs-4">
                                         <label for="" class="control-label mb-1">Date Received From:</label>
-                                        <input name="date_received_from" type="date" class="form-control bor-radius5">
+                                        <input name="date_received_from" type="date" class="form-control bor-radius5" required>
                                     </div>
-                                    <div class="col-lg-6">
+                                    <div class="col-lg-4 col-xs-4">
                                         <label for="" class="control-label mb-1">Date Received To:</label>
-                                        <input name="date_received_to" type="date" class="form-control bor-radius5">
+                                        <input name="date_received_to" type="date" class="form-control bor-radius5" required>
+                                    </div>
+                                    <div class="col-lg-4 col-xs-4">
+                                        <label class="control-label mb-1">With accountability</label>
+                                        <div class="d-flex align-items-center gap-3 mt-2">
+                                            <div class="form-check m-r-5">
+                                                <input class="form-check-input m-r-0" type="radio" name="with_accountability" id="accountability_yes" value="1">
+                                                <label class="form-check-label" for="accountability_yes">Yes</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input m-r-0" type="radio" name="with_accountability" id="accountability_no" value="0">
+                                                <label class="form-check-label" for="accountability_no">No</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -104,4 +117,13 @@
         </div>
     </div>
 </div>
+<script>
+    $(document).ready(function () {
+        $('#damage_modal').on('hidden.bs.modal', function () {
+            // Only reset radio buttons
+            $('input[name="with_accountability"]').prop('checked', false);
+        });
+    });
+</script>
+
 

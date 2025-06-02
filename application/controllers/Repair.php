@@ -208,6 +208,7 @@ class Repair extends CI_Controller {
     public function export_damage(){
         $date_received_from=$this->input->post('date_received_from');
         $date_received_to=$this->input->post('date_received_to');
+        $accountable=$this->input->post('with_accountability');
         $date = date("FY",strtotime($date_received_from));
         require_once(APPPATH.'../assets/dist/js/phpexcel/Classes/PHPExcel/IOFactory.php');
         $objPHPExcel = new PHPExcel();
@@ -248,7 +249,24 @@ class Repair extends CI_Controller {
 
         $num=3;
         $x=1;
-        foreach($this->super_model->select_custom_where("damage_info","receive_date BETWEEN '$date_received_from' AND '$date_received_to'") AS $d){
+
+        // Build the accountability condition
+        if ($accountable == "1") {
+            $accountable_condition = "accountable != 0";
+        } else {
+            $accountable_condition = "accountable = 0";
+        }
+
+        // Final WHERE clause
+         if ($accountable == "") {
+            $where = "receive_date BETWEEN '$date_received_from' AND '$date_received_to'";
+        }else{
+            $where = "receive_date BETWEEN '$date_received_from' AND '$date_received_to' AND $accountable_condition";
+        }
+        
+
+        // foreach($this->super_model->select_custom_where("damage_info","receive_date BETWEEN '$date_received_from' AND '$date_received_to' AND  ") AS $d){
+        foreach ($this->super_model->select_custom_where("damage_info", $where) as $d) {
             $category_id=$this->super_model->select_column_where("et_head","category_id","et_id",$d->et_id);
             $category=$this->super_model->select_column_where("category","category_name","category_id",$category_id);
             $et_desc=$this->super_model->select_column_where("et_head","et_desc","et_id",$d->et_id);
