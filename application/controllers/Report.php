@@ -7085,6 +7085,7 @@ class Report extends CI_Controller {
         $checked =count($edid);
         $date = $this->input->post('date');
         $remarks = $this->input->post('remarks');
+        $ret_remarks = $this->input->post('ret_remarks');
         $ars_no = $this->input->post('ars_no');
         $received_by = $this->input->post('rec_id');
         if(!empty($this->input->post('location_id'))){
@@ -7236,13 +7237,16 @@ class Report extends CI_Controller {
                                 ); 
                                 $this->super_model->update_where("et_details", $det_data, "ed_id", $edid[$x]);
                             }
-                        }
+                        
                         $returndet_data = array(
                             'et_id'=>$ret->et_id,
-                            'ed_id'=>$edid[$y],
+                            'ed_id'=>$edid[$x],
                             'return_id'=>$return_id,
-                            'date_issued'=>$date_issued
+                            'date_issued'=>$date_issued,
+                            'return_remarks'=>isset($ret_remarks[$edid[$x]]) ? $ret_remarks[$edid[$x]] : '',
                         );
+
+                        }
                         $this->super_model->insert_into("return_details", $returndet_data);
                         $new_qty = $q-$val;
                         $qty_data = array(
@@ -7265,7 +7269,8 @@ class Report extends CI_Controller {
                                     'et_id'=>$ret->et_id,
                                     'ed_id'=>$edid[$x],
                                     'return_id'=>$return_id,
-                                    'date_issued'=>$date_issued
+                                    'date_issued'=>$date_issued,
+                                    'return_remarks'=>isset($ret_remarks[$edid[$x]]) ? $ret_remarks[$edid[$x]] : '',
                                 );
                                 $this->super_model->insert_into("return_details", $returndet_data);
                                 foreach($this->super_model->select_row_where('et_details', 'ed_id', $edid[$x]) AS $det){
@@ -7284,7 +7289,7 @@ class Report extends CI_Controller {
             }
         $y++;
         }
-    }   
+    }  
 
     public function export_equipment(){
         require_once(APPPATH.'../assets/dist/js/phpexcel/Classes/PHPExcel/IOFactory.php');
