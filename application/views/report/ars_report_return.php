@@ -57,6 +57,7 @@
                     <td class="main-tab" width="10%" align="center"><strong>Serial No.</strong></td>                    
                     <td class="main-tab" width="7%" align="center"><strong>Unit Cost</strong></td>
                     <td class="main-tab" width="8%" align="center"><strong>Total</strong></td>
+                     <td class="main-tab" width="8%" align="center"><strong>Remarks</strong></td>
                 </tr>
                 <tr>
                 <?php if(!empty($return)){ 
@@ -87,6 +88,7 @@
 
                         <td class="main-tab" align="center"><?php echo number_format($det['total'],2)."<small> ".$det['currency']."</small>"; ?></td>
                         <?php } ?>
+                         <td class="main-tab" align="center"><?php echo $det['return_remarks'];?></td>
                     </tr>
                 <?php   
                     break;
@@ -154,7 +156,7 @@
                 <tr>
                     <td colspan="5" align="center">
                         <a href="" id="printBtn" onclick="iprint()" class="btn btn-success-alt m-t-50 p-l-100 p-r-100">Print</a>
-                        <?php if($test==0 || $lost==1){ ?>
+                        <?php if($count_return==0){ //if($test==0 || $lost==1){ ?>
                         <a id="printBtn" href="<?php echo base_url(); ?>report/acf_report/<?php echo $id;?>" target="_blank" class="btn btn-info m-t-50 animated headShake">Print Clearance</a></td>
                         <?php } ?>
                 </tr>

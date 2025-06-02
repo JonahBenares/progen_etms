@@ -6423,7 +6423,8 @@ class Report extends CI_Controller {
         $id=$this->uri->segment(3);
         foreach($this->super_model->select_row_where('return_head','return_id',$id) AS $ret){
             $data['test'] = $this->super_model->select_column_where("et_head", "accountability_id", "accountability_id", $ret->accountability_id);
-            $data['type'] = $this->super_model->select_column_where("employees", "type", "employee_id", $ret->accountability_id); 
+            $data['count_return'] = $this->super_model->count_join_where("et_details","et_head", "accountability_id='$ret->accountability_id' AND save_temp='0' AND damage='0' AND beyond_repair='0' AND borrowed='0' AND change_location='0' AND lost='0'","et_id");
+            $data['type'] = $this->super_model->select_column_where("employees", "type", "employee_id", $ret->accountability_id);
             foreach($this->super_model->select_row_where('employee_inclusion','parent_id',$ret->accountability_id) AS $em){
                 $status=$this->super_model->select_column_where("employees", "status", "employee_id", $em->child_id);
                 if($status==0){
@@ -6479,6 +6480,7 @@ class Report extends CI_Controller {
 
                 $data['details'][] = array(
                     'return_id'=>$det->return_id,
+                    'return_remarks'=>$det->return_remarks,
                     'set_id'=>$set_id,
                     'count_set'=>$count_set,
                     'set_price'=>$set_price,
