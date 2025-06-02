@@ -97,12 +97,12 @@
                     } else { 
                 ?>
                     <tr>
-                        <td class="main-tab" align="center" colspan='9'><center>No Data Available.</center></td>
+                        <td class="main-tab" align="center" colspan='10'><center>No Data Available.</center></td>
                     </tr>
                 <?php } ?>
                 </tr>
                 <tr>
-                    <td class="main-tab" colspan="9"><center>***nothing follows***</center></td>
+                    <td class="main-tab" colspan="10"><center>***nothing follows***</center></td>
                 </tr>   
             </table>
             <br>
